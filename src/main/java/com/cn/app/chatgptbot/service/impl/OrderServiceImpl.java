@@ -1,15 +1,17 @@
 package com.cn.app.chatgptbot.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.app.chatgptbot.base.B;
 import com.cn.app.chatgptbot.dao.OrderDao;
-import com.cn.app.chatgptbot.exception.CustomException;
-import com.cn.app.chatgptbot.model.*;
+import com.cn.app.chatgptbot.model.Order;
+import com.cn.app.chatgptbot.model.PayConfig;
+import com.cn.app.chatgptbot.model.Product;
+import com.cn.app.chatgptbot.model.RefuelingKit;
+import com.cn.app.chatgptbot.model.User;
 import com.cn.app.chatgptbot.model.req.CreateOrderReq;
 import com.cn.app.chatgptbot.model.req.OrderCallBackReq;
 import com.cn.app.chatgptbot.model.req.QueryOrderReq;
@@ -17,28 +19,30 @@ import com.cn.app.chatgptbot.model.req.ReturnUrlReq;
 import com.cn.app.chatgptbot.model.res.CreateOrderRes;
 import com.cn.app.chatgptbot.model.res.QueryOrderRes;
 import com.cn.app.chatgptbot.model.res.ReturnUrlRes;
-import com.cn.app.chatgptbot.service.*;
+import com.cn.app.chatgptbot.service.IOrderService;
+import com.cn.app.chatgptbot.service.IProductService;
+import com.cn.app.chatgptbot.service.IRefuelingKitService;
+import com.cn.app.chatgptbot.service.IUserService;
 import com.cn.app.chatgptbot.uitls.JwtUtil;
 import com.cn.app.chatgptbot.uitls.RedisUtil;
-import jakarta.annotation.Resource;
 import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 
 @Service("orderService")
 @Transactional(rollbackFor = Exception.class)
-@Log4j2
+@Slf4j
 public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements IOrderService {
 
     @Resource

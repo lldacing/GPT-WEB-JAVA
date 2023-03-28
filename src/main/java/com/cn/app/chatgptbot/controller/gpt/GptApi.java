@@ -21,13 +21,14 @@ import com.cn.app.chatgptbot.service.IUserService;
 import com.cn.app.chatgptbot.uitls.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -42,7 +43,7 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/v1")
 @RequiredArgsConstructor
-@Log4j2
+@Slf4j
 public final class GptApi {
 
     /**

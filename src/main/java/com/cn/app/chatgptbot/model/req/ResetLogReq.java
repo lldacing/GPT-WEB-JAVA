@@ -1,11 +1,8 @@
 package com.cn.app.chatgptbot.model.req;
 
-import com.cn.app.chatgptbot.model.GptTurboModel;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
 /**
  * ClassName:ResetLogReq

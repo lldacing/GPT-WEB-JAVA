@@ -4,7 +4,7 @@ server:
     uri-encoding: utf-8
 spring:
   profiles:
-    active: dev
+    active: @active.profile@
 jackson:
   default-property-inclusion: non_null
 #    设置上传文件大小

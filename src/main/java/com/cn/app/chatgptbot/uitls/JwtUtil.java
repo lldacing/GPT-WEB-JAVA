@@ -1,5 +1,6 @@
 package com.cn.app.chatgptbot.uitls;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -8,12 +9,11 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.cn.app.chatgptbot.constant.CommonConst;
 import com.cn.app.chatgptbot.model.User;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -52,7 +52,7 @@ public class JwtUtil {
      */
     public static boolean verifierToken() {
         String token = getRequestToken();
-        if(Strings.isBlank(token)) {
+        if(StrUtil.isBlank(token)) {
             return false;
         }
         JWTVerifier verifier = getJWTVerifier();
@@ -71,7 +71,7 @@ public class JwtUtil {
      */
     public static long getRemainingTime() {
         String token = getRequestToken();
-        if(Strings.isBlank(token)) {
+        if(StrUtil.isBlank(token)) {
             return 0L;
         }
         JWTVerifier verifier = getJWTVerifier();
@@ -103,7 +103,7 @@ public class JwtUtil {
     public static long getUserId() {
         JWTVerifier verifier = getJWTVerifier();
         String token = getRequestToken();
-        if(Strings.isBlank(token)) {
+        if(StrUtil.isBlank(token)) {
             return 0L;
         }
         try {
@@ -152,7 +152,7 @@ public class JwtUtil {
         HttpServletRequest request =
                 ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String token = request.getHeader("token");
-        if(Strings.isBlank(token)) {
+        if(StrUtil.isBlank(token)) {
             return null;
         }
         return token;

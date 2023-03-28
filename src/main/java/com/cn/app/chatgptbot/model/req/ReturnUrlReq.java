@@ -1,10 +1,9 @@
 package com.cn.app.chatgptbot.model.req;
 
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.models.auth.In;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.NonNull;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * ClassName:CreateOrderReq
