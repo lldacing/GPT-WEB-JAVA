@@ -1,6 +1,7 @@
 package com.cn.app.chatgptbot.controller;
 
 import com.cn.app.chatgptbot.base.B;
+import com.cn.app.chatgptbot.model.ali.req.AliPayCreateReq;
 import com.cn.app.chatgptbot.model.base.BaseDeleteEntity;
 import com.cn.app.chatgptbot.model.base.BasePageHelper;
 import com.cn.app.chatgptbot.model.req.CreateOrderReq;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * 商品表(gptKey)表控制层
  *
@@ -28,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/order")
 @RequiredArgsConstructor
-@Api(tags = {"order"})
+@Api(tags = {"订单管理"})
 public class OrderController {
 
 
@@ -61,5 +64,17 @@ public class OrderController {
     @ApiOperation(value = "查询订单列表")
     public B query(@Validated @RequestBody QueryOrderReq req) {
         return orderService.query(req);
+    }
+
+    @RequestMapping(value = "/ali/create", method = RequestMethod.POST)
+    @ApiOperation(value = "支付宝创建预订单")
+    public synchronized  B<String> aliCreateOrder(@Validated @RequestBody AliPayCreateReq req) throws Exception {
+        return orderService.aliCreateOrder(req);
+    }
+
+    @RequestMapping(value = "/ali/callBack")
+    @ApiOperation(value = "支付宝支付回调")
+    public synchronized String aliCallBack(HttpServletRequest request) throws Exception {
+        return orderService.aliCallBack(request);
     }
 }

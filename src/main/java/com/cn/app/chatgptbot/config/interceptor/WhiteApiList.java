@@ -1,4 +1,4 @@
-package com.cn.app.chatgptbot.config;
+package com.cn.app.chatgptbot.config.interceptor;
 
 import org.springframework.util.DigestUtils;
 
@@ -19,6 +19,7 @@ public class WhiteApiList {
         list.add("/user/token/register");
         //支付回调
         list.add("/order/callback");
+        list.add("/order/ali/callBack");
 
         //swagger
         list.add("/swagger-resources");

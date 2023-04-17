@@ -1,15 +1,20 @@
 package com.cn.app.chatgptbot.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.alipay.easysdk.factory.Factory;
+import com.alipay.easysdk.kernel.util.ResponseChecker;
+import com.alipay.easysdk.payment.page.models.AlipayTradePagePayResponse;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.app.chatgptbot.base.B;
+import com.cn.app.chatgptbot.config.ali.AliPayConfig;
 import com.cn.app.chatgptbot.dao.OrderDao;
 import com.cn.app.chatgptbot.exception.CustomException;
 import com.cn.app.chatgptbot.model.*;
+import com.cn.app.chatgptbot.model.ali.AlipayNotifyParam;
+import com.cn.app.chatgptbot.model.ali.req.AliPayCreateReq;
 import com.cn.app.chatgptbot.model.req.CreateOrderReq;
 import com.cn.app.chatgptbot.model.req.OrderCallBackReq;
 import com.cn.app.chatgptbot.model.req.QueryOrderReq;
@@ -18,22 +23,22 @@ import com.cn.app.chatgptbot.model.res.CreateOrderRes;
 import com.cn.app.chatgptbot.model.res.QueryOrderRes;
 import com.cn.app.chatgptbot.model.res.ReturnUrlRes;
 import com.cn.app.chatgptbot.service.*;
-import com.cn.app.chatgptbot.uitls.JwtUtil;
-import com.cn.app.chatgptbot.uitls.RedisUtil;
-import jakarta.annotation.Resource;
+import com.cn.app.chatgptbot.utils.JwtUtil;
+import com.cn.app.chatgptbot.utils.RedisUtil;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 
 @Service("orderService")
@@ -227,6 +232,66 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements IO
         return B.okBuild(queryOrderResPage);
     }
 
+    @Override
+    public B<String> aliCreateOrder(AliPayCreateReq req) throws Exception {
+        PayConfig payConfig = RedisUtil.getCacheObject("payConfig");
+        if(payConfig.getPayType() < 2){
+            return B.finalBuild("支付宝支付通道关闭");
+        }
+        Product product = productService.getById(req.getProductId());
+        if (null == product) {
+            return B.finalBuild("商品异常");
+        }
+        if(product.getStock() < req.getPayNumber()){
+            return B.finalBuild("库存不足");
+        }
+        Order order = BeanUtil.copyProperties(req, Order.class);
+        order.setUserId(JwtUtil.getUserId());
+        order.setPrice(product.getPrice().multiply(new BigDecimal(req.getPayNumber())));
+        order.setPayType("支付宝");
+        order.setCreateTime(LocalDateTime.now());
+        this.save(order);
+        // 生成系统订单号
+        String outTradeNo = order.getId().toString();
+        AlipayTradePagePayResponse response = Factory.Payment.Page()
+                .pay("商品"+product.getName()+"数量"+order.getPayNumber(), outTradeNo, order.getPrice().toString(),payConfig.getAliReturnUrl());
+        if (!ResponseChecker.success(response)) {
+            throw new CustomException("预订单生成失败");
+        }
+        return B.okBuild(response.getBody().replace("\"","").replace("\n",""));
+    }
+
+    @Override
+    public String aliCallBack(HttpServletRequest request) throws Exception {
+        Map<String, String> stringStringMap = AliPayConfig.convertRequestParamsToMap(request);
+        PayConfig payConfig = RedisUtil.getCacheObject("payConfig");
+        if (Factory.Payment.Common().verifyNotify(stringStringMap)){
+            if(!stringStringMap.get("app_id").equals(payConfig.getAliAppId())){
+                log.info("appId不一致");
+                return "failure";
+            }
+            AlipayNotifyParam param = AliPayConfig.buildAlipayNotifyParam(stringStringMap);
+            // 支付成功
+            Order order = this.getById(param.getOutTradeNo());
+            if(null == order){
+                log.info("订单不存在");
+                return "failure";
+            }else {
+                if(order.getPrice().compareTo(param.getTotalAmount()) != 0){
+                    log.info("订单金额异常");
+                    return "failure";
+                }
+                order.setTradeNo(param.getTradeNo());
+                order.setOperateTime(LocalDateTime.now());
+                order.setState(1);
+                this.saveOrUpdate(order);
+            }
+            return "success";
+        }else {
+            return "failure";
+        }
+    }
+
     public static String createSign(CreateOrderRes res){
         Map<String,String> sign = new HashMap<>();
         sign.put("pid",res.getPid().toString());
@@ -256,53 +321,5 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, Order> implements IO
         map.entrySet().stream()
                 .sorted(Map.Entry.<K, V>comparingByKey()).forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
         return result;
-    }
-
-    public static void main(String[] args) {
-
-        String url = "https://www.11zhifu.cn/";//支付地址
-        String pid = "1091";//商户id
-        String type = "wxpay";//支付类型
-        String outTradeNo = "20160806151343353";//商户单号
-        String notifyUrl = "https://401c5023.r3.cpolar.top/order/callback";//异步通知
-        String returnUrl = "https://baidu.com";//跳转地址
-        String name = "test";//商品名
-        String money = "0.02";//价格
-        String signType = "MD5";//签名类型
-        String key = "1RxMSsb6WAngm49JTmw26zSG5GG9m27u";//商户密钥
-
-        Map<String,String> sign = new HashMap<>();
-        sign.put("pid",pid);
-        sign.put("type",type);
-        sign.put("out_trade_no",outTradeNo);
-        sign.put("notify_url",notifyUrl);
-        sign.put("return_url",returnUrl);
-        sign.put("name",name);
-        sign.put("money",money);
-        sign = sortByKey(sign);
-        //遍历map 转成字符串
-        String signStr = "";
-
-        for(Map.Entry<String,String> m :sign.entrySet()){
-            signStr += m.getKey() + "=" +m.getValue()+"&";
-        }
-        //去掉最后一个 &
-        signStr = signStr.substring(0,signStr.length()-1);
-
-        //最后拼接上KEY
-        signStr += key;
-        //转为MD5
-        signStr = DigestUtils.md5DigestAsHex(signStr.getBytes());
-
-        sign.put("sign_type",signType);
-        sign.put("sign",signStr);
-        System.out.println("<form id='paying' action='"+url+"/submit.php' method='post'>");
-        for(Map.Entry<String,String> m :sign.entrySet()){
-            System.out.println("<input type='hidden' name='"+m.getKey()+"' value='"+m.getValue()+"'/>");
-        }
-        System.out.println("<input type='submit' value='正在跳转'>");
-        System.out.println("</form>");
-        System.out.println("<script>document.forms['paying'].submit();</script>");
-
     }
 }

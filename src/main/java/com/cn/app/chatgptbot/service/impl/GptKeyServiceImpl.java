@@ -1,6 +1,5 @@
 package com.cn.app.chatgptbot.service.impl;
 
-import cn.hutool.core.exceptions.ValidateException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,20 +7,19 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.app.chatgptbot.base.B;
 import com.cn.app.chatgptbot.base.ResultEnum;
 import com.cn.app.chatgptbot.dao.GptKeyDao;
-import com.cn.app.chatgptbot.dao.ProductDao;
+import com.cn.app.chatgptbot.exception.CustomException;
 import com.cn.app.chatgptbot.model.GptKey;
-import com.cn.app.chatgptbot.model.Product;
 import com.cn.app.chatgptbot.model.base.BaseDeleteEntity;
 import com.cn.app.chatgptbot.model.base.BasePageHelper;
+import com.cn.app.chatgptbot.model.req.UpdateKeyStateReq;
 import com.cn.app.chatgptbot.service.IGptKeyService;
-import com.cn.app.chatgptbot.service.IProductService;
-import com.cn.app.chatgptbot.uitls.GptUtil;
+import com.cn.app.chatgptbot.utils.GptUtil;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,12 +36,7 @@ public class GptKeyServiceImpl extends ServiceImpl<GptKeyDao, GptKey> implements
 
 
 
-    /**
-     * 分页查询Product
-     *
-     * @param basePageHelper 参数
-     * @return 返回对象
-     */
+
     @Override
     public B queryPage(BasePageHelper basePageHelper) {
         JSONObject jsonObject = new JSONObject();
@@ -55,12 +48,7 @@ public class GptKeyServiceImpl extends ServiceImpl<GptKeyDao, GptKey> implements
         return B.build(ResultEnum.SUCCESS.getCode(), ResultEnum.SUCCESS.getMsg(), jsonObject);
     }
 
-    /**
-     * 新增Product
-     *
-     * @param params 参数
-     * @return 返回对象
-     */
+
     @Override
     public B add(String params) {
         GptKey gptKey = JSONObject.parseObject(params, GptKey.class);
@@ -78,13 +66,18 @@ public class GptKeyServiceImpl extends ServiceImpl<GptKeyDao, GptKey> implements
         return B.build(ResultEnum.SUCCESS.getCode(), ResultEnum.SUCCESS.getMsg());
     }
 
+    @Override
+    public B updateState(UpdateKeyStateReq params) {
+        GptKey gptKey = this.getById(params.getId());
+        if(null == gptKey){
+            throw new CustomException("key不存在");
+        }
+        gptKey.setState(gptKey.getState());
+        this.saveOrUpdate(gptKey);
+        GptUtil.add(gptKey.getKey());
+        return B.build(ResultEnum.SUCCESS.getCode(), ResultEnum.SUCCESS.getMsg());
+    }
 
-    /**
-     * 通过id删除Product
-     *
-     * @param params 参数
-     * @return 返回对象
-     */
     @Override
     public B delete(BaseDeleteEntity params) {
         List<GptKey> list = this.lambdaQuery().in(GptKey::getId, params.getIds()).list();
