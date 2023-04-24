@@ -24,7 +24,7 @@
 --客户端  
 
 * **登录**
-* **注册赠送10次对话**
+* **注册赠送10次对话（短信注册，公众号注册，邮箱注册，账号密码注册）**
 * **对话记录**
 * **画图**
 * **流式对话**
@@ -32,7 +32,8 @@
 * **个人信息展示（剩余次数，身份，昵称）**
 * **产品查询购买（支持支付宝，微信，QQ钱包）**
 * **订单查询**
-* **支付 易支付，支付宝支付，微信支付开发中**  
+* **支付 易支付，支付宝支付，微信支付**  
+* **stable-diffusion画图**  
 
 
 --管理端  
@@ -44,6 +45,7 @@
 * **订单管理**
 * **公告管理**
 * **产品管理**
+* **系统配置**
 
 
  
@@ -306,24 +308,16 @@ com.cn.app.chatgptbot.Application        : Started Application in 5.138 seconds 
 
 ### And coding style tests
  
- **后端基于另一个开源项目开发，所用到jdk17特性**  
- 
  **Vue2.0前端地址[GPT-WEB-CLIENT](https://github.com/a616567126/GPT-WEB-CLIENT)**  
  
- 
- 
-## Express gratitude
- 
- **感谢开源作者 [dulaiduwang003](https://github.com/dulaiduwang003/ChatGPT_wechat) 提供的基础GPT功能可以的话点个Star**  
- 
- 
+
  
 ## Contributors
 
 这个项目的存在要感谢所有做出贡献的人.
 
-<a href="https://github.com/a616567126/GPT-WEB-CLIENT/graphs/contributors">
-<img src="https://contrib.rocks/image?repo=a616567126/GPT-WEB-CLIENT" />
+<a href="https://github.com/a616567126/GPT-WEB-JAVA/graphs/contributors">
+<img src="https://contrib.rocks/image?repo=a616567126/GPT-WEB-JAVA" />
 </a>  
 
 

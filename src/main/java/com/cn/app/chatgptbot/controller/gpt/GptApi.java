@@ -119,7 +119,7 @@ public final class GptApi {
             return Result.error(result.getMsg());
         }
         return Result.data(
-                WebClientUtil.build(proxyUtil.getProxy(), "images/generations", gptAlphaModel, mainKey,(Long)result.getData())
+                WebClientUtil.build(proxyUtil.getProxy(), "/v1/images/generations", gptAlphaModel, mainKey,(Long)result.getData())
         );
     }
 
